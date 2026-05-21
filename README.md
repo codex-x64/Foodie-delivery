@@ -129,7 +129,7 @@ Foodie-delivery/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/CyberMythos/Foodie-delivery.git
+git clone https://github.com/codex-x64/Foodie-delivery.git
 cd Foodie-delivery
 
 ```

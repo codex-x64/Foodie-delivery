@@ -128,6 +128,11 @@ def set_security_headers(response):
     )
     if os.environ.get("FLASK_ENV") == "production":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    else:
+        # Development: Disable caching to always load latest updates
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
     return response
 
 

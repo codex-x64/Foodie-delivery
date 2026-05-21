@@ -129,8 +129,8 @@ Foodie-delivery/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/CyberMythos/Foodie.git
-cd Foodie
+git clone https://github.com/CyberMythos/Foodie-delivery.git
+cd Foodie-delivery
 
 ```
 

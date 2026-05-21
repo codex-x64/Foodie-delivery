@@ -139,6 +139,7 @@ def set_security_headers(response):
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.route("/favicon.png")
 def favicon():
+    # Serve favicon.png from templates folder
     return send_from_directory(
         os.path.join(app.root_path, app.template_folder),
         "favicon.png",

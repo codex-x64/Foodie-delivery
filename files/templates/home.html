@@ -1199,17 +1199,18 @@
         pointer-events: auto;
       }
       .orders-modal {
-        background: var(--cart-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(15, 15, 26, 0.9), rgba(20, 20, 32, 0.9));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
         width: 95%;
-        max-width: 500px;
-        padding: 1.8rem;
+        max-width: 540px;
+        padding: 2rem 1.8rem;
         transform: scale(0.95);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         max-height: 85vh;
         overflow-y: auto;
         scrollbar-width: none;
+        backdrop-filter: blur(20px);
       }
       .orders-modal::-webkit-scrollbar {
         display: none;
@@ -1221,12 +1222,18 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.8rem;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       }
       .orders-modal-title {
         font-family: "Playfair Display", serif;
-        font-size: 1.4rem;
+        font-size: 1.6rem;
         font-weight: 700;
+        background: linear-gradient(135deg, var(--text), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
       .orders-modal-close {
         background: none;
@@ -1240,57 +1247,92 @@
       .orders-modal-close:hover {
         color: var(--text);
       }
+      #ordersContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
       .order-item {
-        background: var(--card-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 14px;
-        padding: 1.2rem;
-        margin-bottom: 1rem;
+        background: rgba(20, 20, 32, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 16px;
+        padding: 1.4rem;
+        margin-bottom: 1.2rem;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+      }
+      .order-item:hover {
+        background: rgba(20, 20, 32, 0.8);
+        border-color: rgba(244, 161, 74, 0.2);
       }
       .order-id {
         font-family: "Playfair Display", serif;
-        font-size: 1.1rem;
+        font-size: 1.3rem;
         font-weight: 700;
         color: var(--accent);
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.8rem;
+        letter-spacing: 0.5px;
       }
       .order-meta {
         display: flex;
-        gap: 1rem;
-        font-size: 0.8rem;
+        flex-direction: column;
+        gap: 0.4rem;
+        font-size: 0.82rem;
         color: var(--text-muted);
-        margin-bottom: 0.8rem;
-        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       }
       .order-restaurant {
         font-weight: 600;
         color: var(--text);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
       }
       .order-items-list {
-        font-size: 0.85rem;
+        font-size: 0.88rem;
         color: var(--text);
-        margin-bottom: 0.8rem;
+        margin-bottom: 1rem;
       }
       .order-item-detail {
-        padding: 0.3rem 0;
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--text);
+      }
+      .order-item-detail::before {
+        content: '';
+        display: inline-block;
+        width: 1px;
+        height: 1.2em;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 0 0.4rem;
       }
       .order-divider {
-        border-top: 1px dashed var(--glass-border);
-        margin: 0.8rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        margin: 1rem 0;
       }
       .order-total {
         display: flex;
         justify-content: space-between;
         align-items: center;
         font-family: "Playfair Display", serif;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         font-weight: 700;
         color: var(--accent);
+        padding-top: 0.5rem;
+      }
+      .order-total span:last-child {
+        font-size: 1.2rem;
       }
       .order-cancelled {
         font-size: 0.78rem;
         color: rgba(255, 95, 109, 0.8);
-        margin-top: 0.5rem;
+        margin-top: 0.8rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid rgba(255, 95, 109, 0.2);
       }
 
       /* ── RESPONSIVE ── */
@@ -2055,7 +2097,7 @@
             const itemsList = order.items
               .map(
                 (i) =>
-                  `<div class="order-item-detail">• ${i.emoji} ${i.name} x${i.qty} = ৳${i.price * i.qty}</div>`,
+                  `<div class="order-item-detail">${i.emoji} ${i.name} x${i.qty} = ৳${i.price * i.qty}</div>`,
               )
               .join("");
 

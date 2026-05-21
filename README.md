@@ -169,30 +169,7 @@ pip install -r files/requirements.txt
 
 ```
 
-### 3. Configure Environment Variables
-
-Create a `.env` file in the project root with the following configuration:
-
-```bash
-# .env file
-FLASK_ENV=development
-SECRET_KEY=your-secret-key-change-this-in-production
-ADMIN_PATH=
-DATABASE_PATH=files/foodie.db
-FLASK_HOST=127.0.0.1
-FLASK_PORT=5000
-LOG_LEVEL=INFO
-
-```
-
-**For production**, generate a strong SECRET_KEY:
-
-```bash
-python -c "import os; print(os.urandom(32).hex())"
-
-```
-
-### 4. Run the app
+### 4. Run the App - Choose Your Access Method
 
 Make sure your virtual environment is active (you will see `(venv)` at the beginning of your terminal line), then run:
 
@@ -202,12 +179,64 @@ python app.py
 
 ```
 
-Open the app in your browser:
+#### 🔹 Option A: Localhost Only (Default)
+
+Access the app locally on your machine:
 
 ```text
 http://127.0.0.1:5000
+or
+http://localhost:5000
 
 ```
+
+This is the default configuration. Only your machine can access the app.
+
+#### 🔹 Option B: WiFi Access (Network IP + Port 8080)
+
+To access the app from other devices on your WiFi network:
+
+**Step 1**: Find your machine's local IP address:
+
+**Linux/macOS:**
+
+```bash
+ifconfig | grep "inet " | grep -v 127.0.0.1
+```
+
+**Windows (PowerShell):**
+
+```powershell
+ipconfig
+```
+
+Look for "IPv4 Address" under your WiFi adapter (e.g., `192.168.x.x`)
+
+**Step 2**: Update `.env` file:
+
+```bash
+FLASK_HOST=0.0.0.0
+FLASK_PORT=8080
+
+```
+
+**Step 3**: Run the app:
+
+```bash
+cd files
+python app.py
+
+```
+
+**Step 4**: Access from any device on your WiFi:
+
+```text
+http://YOUR_MACHINE_IP:8080
+Example: http://192.168.1.100:8080
+
+```
+
+Now other devices (phones, tablets, laptops) on the same WiFi network can access your app!
 
 ## Route Map
 
@@ -243,6 +272,65 @@ http://127.0.0.1:5000
 14. **Order History**: User views past orders from profile dropdown → "My Orders"
 15. **API Retrieval**: Frontend fetches GET `/api/orders` to load user-specific orders
 16. **Order Modal**: My Orders modal displays all orders with itemized details and totals
+
+## Local vs Production Configuration
+
+### Local Development (Recommended Settings)
+
+```bash
+# .env file
+FLASK_ENV=development
+SECRET_KEY=dev-key-localhost-only          # Safe for localhost
+DATABASE_PATH=files/foodie.db
+FLASK_HOST=127.0.0.1                       # Localhost only
+FLASK_PORT=5000
+LOG_LEVEL=INFO
+```
+
+**Why these settings?**
+
+- `SECRET_KEY`: Doesn't need to be strong for local development (no security risk)
+- `FLASK_HOST=127.0.0.1`: Only you can access from your machine
+- `FLASK_PORT=5000`: Default Flask port, easy to remember
+
+### Local Network Testing (WiFi Sharing)
+
+```bash
+# .env file
+FLASK_ENV=development
+SECRET_KEY=dev-key-localhost-only          # Still safe for WiFi
+DATABASE_PATH=files/foodie.db
+FLASK_HOST=0.0.0.0                         # Listen on all network interfaces
+FLASK_PORT=8080                            # Non-privileged port
+LOG_LEVEL=INFO
+```
+
+**Why these settings?**
+
+- `FLASK_HOST=0.0.0.0`: Accessible from any device on your WiFi
+- `FLASK_PORT=8080`: Non-privileged port (no admin rights needed)
+- Still using dev `SECRET_KEY` (it's your local network)
+
+### Production Deployment (Different Settings Required)
+
+```bash
+# .env file (MUST be secure)
+FLASK_ENV=production
+SECRET_KEY=abcd1234...xyz (generated strong key)  # MUST be generated
+DATABASE_PATH=/var/lib/foodie/foodie.db          # Use absolute path
+FLASK_HOST=127.0.0.1                             # Behind reverse proxy
+FLASK_PORT=5000
+LOG_LEVEL=WARNING
+```
+
+**Critical changes for production:**
+
+- `FLASK_ENV=production`: Enables security headers and HTTPS-only cookies
+- `SECRET_KEY`: MUST be generated with `python -c "import os; print(os.urandom(32).hex())"`
+- Use a reverse proxy (Nginx) instead of exposing Flask directly
+- Never use `FLASK_HOST=0.0.0.0` in production without a firewall
+
+---
 
 ## Production Notes
 

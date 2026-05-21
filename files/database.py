@@ -39,6 +39,27 @@ def init_db():
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             details TEXT
         );
+
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            order_id TEXT NOT NULL UNIQUE,
+            restaurant TEXT,
+            total REAL NOT NULL,
+            cancelled INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE IF NOT EXISTS order_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            item_name TEXT NOT NULL,
+            emoji TEXT,
+            price REAL NOT NULL,
+            quantity INTEGER NOT NULL,
+            FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+        );
     """)
     conn.commit()
     conn.close()
@@ -165,5 +186,83 @@ def get_auth_logs(limit=100):
             "SELECT * FROM auth_logs ORDER BY timestamp DESC LIMIT ?", (limit,)
         ).fetchall()
         return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def save_order(user_id, order_id, items, restaurant, total, cancelled=0):
+    """Save an order to the database"""
+    conn = get_db()
+    try:
+        cursor = conn.cursor()
+        # Insert order
+        cursor.execute(
+            """INSERT INTO orders (user_id, order_id, restaurant, total, cancelled)
+               VALUES (?, ?, ?, ?, ?)""",
+            (user_id, order_id, restaurant, total, cancelled),
+        )
+        order_db_id = cursor.lastrowid
+        
+        # Insert order items
+        for item in items:
+            cursor.execute(
+                """INSERT INTO order_items (order_id, item_name, emoji, price, quantity)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (order_db_id, item.get('name'), item.get('emoji'), item.get('price'), item.get('qty')),
+            )
+        
+        conn.commit()
+        return True
+    except Exception as e:
+        logger.error(f"Error saving order: {e}")
+        return False
+    finally:
+        conn.close()
+
+
+def get_user_orders(user_id):
+    """Fetch all orders for a specific user"""
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            """SELECT o.id, o.order_id, o.restaurant, o.total, o.cancelled, o.created_at
+               FROM orders o
+               WHERE o.user_id = ?
+               ORDER BY o.created_at DESC""",
+            (user_id,),
+        ).fetchall()
+        
+        orders = []
+        for row in rows:
+            order_dict = dict(row)
+            # Get items for this order
+            items_rows = conn.execute(
+                """SELECT item_name as name, emoji, price, quantity as qty
+                   FROM order_items
+                   WHERE order_id = ?""",
+                (row['id'],),
+            ).fetchall()
+            order_dict['items'] = [dict(i) for i in items_rows]
+            orders.append(order_dict)
+        
+        return orders
+    finally:
+        conn.close()
+
+
+def delete_order(order_db_id, user_id):
+    """Delete an order (only if it belongs to the user)"""
+    conn = get_db()
+    try:
+        # Verify the order belongs to this user
+        row = conn.execute(
+            "SELECT user_id FROM orders WHERE id = ?", (order_db_id,)
+        ).fetchone()
+        
+        if row and row['user_id'] == user_id:
+            conn.execute("DELETE FROM orders WHERE id = ?", (order_db_id,))
+            conn.commit()
+            return True
+        return False
     finally:
         conn.close()

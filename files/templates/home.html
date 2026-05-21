@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>Foodie. — Order Now</title>
     <link rel="icon" type="image/png" href="{{ url_for('favicon') }}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -373,7 +374,7 @@
         top: 0;
         right: 0;
         bottom: 0;
-        width: 380px;
+        width: 33.33vw;
         max-width: 100vw;
         background: var(--cart-bg);
         border-left: 1px solid var(--glass-border);
@@ -1336,6 +1337,108 @@
       }
 
       /* ── RESPONSIVE ── */
+      /* ── REVIEWS CAROUSEL ── */
+      .reviews-section {
+        position: relative;
+        overflow: hidden;
+      }
+      .carousel-container {
+        position: relative;
+        width: 100%;
+        overflow: hidden;
+        border-radius: 20px;
+      }
+      .carousel-track {
+        display: flex;
+        transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100%;
+      }
+      .carousel-slide {
+        min-width: 100%;
+        padding: 2.5rem 2rem;
+        background: linear-gradient(135deg, rgba(244, 161, 74, 0.1), rgba(224, 92, 58, 0.05));
+        border: 1px solid rgba(244, 161, 74, 0.2);
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+      .review-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1.2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+      .review-avatar {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        flex-shrink: 0;
+      }
+      .review-info {
+        flex: 1;
+      }
+      .review-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .review-restaurant {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+      }
+      .review-stars {
+        display: flex;
+        gap: 0.3rem;
+      }
+      .star {
+        color: var(--accent);
+        font-size: 0.95rem;
+        line-height: 1;
+      }
+      .star.empty {
+        opacity: 0.25;
+      }
+      .review-text {
+        font-size: 0.95rem;
+        line-height: 1.7;
+        color: var(--text);
+        font-weight: 300;
+      }
+      .carousel-nav {
+        display: flex;
+        justify-content: center;
+        gap: 0.6rem;
+        padding-top: 1.5rem;
+        align-items: center;
+      }
+      .carousel-dot {
+        width: 8px;
+        height: 8px;
+        background: rgba(244, 161, 74, 0.3);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        border: 1px solid rgba(244, 161, 74, 0.2);
+      }
+      .carousel-dot.active {
+        background: var(--accent);
+        width: 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(244, 161, 74, 0.3);
+        border-color: var(--accent);
+      }
+      .carousel-dot:hover {
+        background: rgba(244, 161, 74, 0.6);
+      }
+
       @media (max-width: 768px) {
         nav {
           padding: 0.8rem 1rem;
@@ -1351,6 +1454,9 @@
         }
         .cart-sidebar {
           width: 100vw;
+        }
+        .carousel-slide {
+          padding: 2rem 1.5rem;
         }
         .hero {
           padding: 5rem 1.2rem 3rem;
@@ -1604,6 +1710,25 @@
       </div>
     </section>
 
+    <!-- REVIEWS CAROUSEL -->
+    <section id="reviews" class="reviews-section">
+      <div class="section-label">Real feedback</div>
+      <h3 class="section-title">What Customers Say</h3>
+      <p class="section-sub">
+        Join thousands of satisfied customers enjoying food delivered fresh and fast.
+      </p>
+      <div style="margin-top: 2rem;">
+        <div class="carousel-container">
+          <div class="carousel-track" id="carouselTrack">
+            <!-- Reviews rendered by JS -->
+          </div>
+          <div class="carousel-nav" id="carouselNav">
+            <!-- Dots rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- HOW IT WORKS -->
     <section id="how-it-works">
       <div class="section-label">Simple as 1-2-3</div>
@@ -1651,6 +1776,51 @@
 
     <script>
       // ── DATA ───────────────────────────────────────────────────────────────────
+      const REVIEWS_DATA = [
+        {
+          avatar: "😋",
+          name: "Sarah Khan",
+          restaurant: "Flame & Fork",
+          text: "The grilled chicken steak was absolutely delicious! Best food delivery I've ever had. Arrived hot and fresh!",
+          rating: 5,
+        },
+        {
+          avatar: "🥰",
+          name: "Ahmed Ali",
+          restaurant: "Pasta Republic",
+          text: "Carbonara was perfectly cooked. The sauce was creamy and authentic. Highly recommend!",
+          rating: 5,
+        },
+        {
+          avatar: "👍",
+          name: "Maria Lopez",
+          restaurant: "The Steak Room",
+          text: "Amazing quality meat, cooked to perfection. The truffle mashed potatoes were a game changer.",
+          rating: 5,
+        },
+        {
+          avatar: "🍽️",
+          name: "Ravi Patel",
+          restaurant: "Spice Garden",
+          text: "Authentic Indian flavors! The butter chicken was rich and flavorful. Best delivery service in Dhaka!",
+          rating: 5,
+        },
+        {
+          avatar: "😍",
+          name: "Lisa Chen",
+          restaurant: "Golden Crunch",
+          text: "Crispy fried chicken and fresh fries. Great value for money and super fast delivery!",
+          rating: 5,
+        },
+        {
+          avatar: "🎉",
+          name: "Hassan Hossain",
+          restaurant: "Cozy Kitchen",
+          text: "Home-style cooking at its finest. The khichdi was comfort food at its best!",
+          rating: 5,
+        },
+      ];
+
       const CATEGORY_DATA = {
         Pizza: [
           { e: "🍕", name: "Margherita", price: 320 },
@@ -1852,21 +2022,44 @@
         localStorage.setItem("foodieCart", JSON.stringify(cart));
       }
 
-      // Load orders from localStorage
-      function loadOrders() {
-        const saved = localStorage.getItem("foodieOrders");
-        if (saved) {
-          try {
-            orders = JSON.parse(saved);
-          } catch (e) {
-            orders = [];
+      // Load orders from database via API
+      async function loadOrders() {
+        try {
+          const response = await fetch("/api/orders");
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+              orders = data.orders || [];
+            }
           }
+        } catch (e) {
+          console.error("Error loading orders:", e);
+          orders = [];
         }
       }
 
-      // Save orders to localStorage
-      function saveOrders() {
-        localStorage.setItem("foodieOrders", JSON.stringify(orders));
+      // Save orders to database via API
+      async function saveOrderToAPI(order) {
+        try {
+          const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+          const response = await fetch("/api/orders", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify({
+              order_id: order.id,
+              restaurant: order.restaurant,
+              items: order.items,
+              total: order.total,
+            }),
+          });
+          return response.ok && (await response.json()).success;
+        } catch (e) {
+          console.error("Error saving order:", e);
+          return false;
+        }
       }
 
       // ── RENDER CATEGORIES ──────────────────────────────────────────────────────
@@ -2051,7 +2244,7 @@
         document.body.style.overflow = "";
       }
 
-      function placeOrder() {
+      async function placeOrder() {
         if (Object.keys(cart).length === 0) {
           showToast("⚠️", "Cart is empty!");
           return;
@@ -2071,19 +2264,24 @@
           cancelled: 0,
         };
 
-        orders.unshift(order);
-        saveOrders();
-
-        cart = {};
-        updateCartUI();
-        saveCart();
-        closeCart();
-        showToast("✅", `Order #${orderId} confirmed! 🎉`);
+        // Save order to database via API
+        const saved = await saveOrderToAPI(order);
+        
+        if (saved) {
+          orders.unshift(order);
+          cart = {};
+          updateCartUI();
+          saveCart();
+          closeCart();
+          showToast("✅", `Order #${orderId} confirmed! 🎉`);
+        } else {
+          showToast("❌", "Failed to place order. Please try again.");
+        }
       }
 
       // ── ORDERS ─────────────────────────────────────────────────────────────────
-      function openOrders() {
-        loadOrders();
+      async function openOrders() {
+        await loadOrders();
         document.getElementById("dropdownMenu").classList.remove("open");
         document.getElementById("userPill").classList.remove("open");
 
@@ -2210,9 +2408,82 @@
         }
       });
 
+      // ── CAROUSEL ──────────────────────────────────────────────────────────────
+      let currentReviewIndex = 0;
+      let carouselInterval;
+
+      function renderCarousel() {
+        const track = document.getElementById("carouselTrack");
+        const nav = document.getElementById("carouselNav");
+        track.innerHTML = "";
+        nav.innerHTML = "";
+
+        // Render slides
+        REVIEWS_DATA.forEach((review, i) => {
+          const slide = document.createElement("div");
+          slide.className = "carousel-slide";
+          const stars = Array(5)
+            .fill()
+            .map((_, j) => `<span class="star${j < review.rating ? "" : " empty"}">★</span>`)
+            .join("");
+          slide.innerHTML = `
+            <div class="review-header">
+              <div class="review-avatar">${review.avatar}</div>
+              <div class="review-info">
+                <div class="review-name">${review.name}</div>
+                <div class="review-restaurant">📍 ${review.restaurant}</div>
+              </div>
+              <div class="review-stars">${stars}</div>
+            </div>
+            <div class="review-text">"${review.text}"</div>
+          `;
+          track.appendChild(slide);
+        });
+
+        // Render dots
+        REVIEWS_DATA.forEach((_, i) => {
+          const dot = document.createElement("div");
+          dot.className = "carousel-dot" + (i === currentReviewIndex ? " active" : "");
+          dot.onclick = () => goToSlide(i);
+          nav.appendChild(dot);
+        });
+
+        updateCarouselPosition();
+      }
+
+      function updateCarouselPosition() {
+        const track = document.getElementById("carouselTrack");
+        track.style.transform = `translateX(-${currentReviewIndex * 100}%)`;
+        
+        // Update active dot
+        document.querySelectorAll(".carousel-dot").forEach((dot, i) => {
+          dot.classList.toggle("active", i === currentReviewIndex);
+        });
+      }
+
+      function goToSlide(index) {
+        currentReviewIndex = index;
+        updateCarouselPosition();
+        resetCarouselTimer();
+      }
+
+      function nextSlide() {
+        currentReviewIndex = (currentReviewIndex + 1) % REVIEWS_DATA.length;
+        updateCarouselPosition();
+      }
+
+      function resetCarouselTimer() {
+        clearInterval(carouselInterval);
+        carouselInterval = setInterval(nextSlide, 5000);
+      }
+
+      // Initialize carousel
+      renderCarousel();
+      carouselInterval = setInterval(nextSlide, 5000);
+
       // Initialize on page load
       loadCart();
-      loadOrders();
+      loadOrders().catch(e => console.error("Failed to load orders:", e));
     </script>
   </body>
 </html>

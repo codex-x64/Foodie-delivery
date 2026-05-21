@@ -6,7 +6,7 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, session, abort, send_from_directory
+    url_for, session, abort, send_from_directory, jsonify
 )
 from flask_login import (
     LoginManager, UserMixin, login_user, logout_user,
@@ -22,7 +22,8 @@ from wtforms.validators import DataRequired
 from database import (
     init_db, create_user, get_user_by_username, get_user_by_email,
     get_user_by_id, update_last_login, increment_failed_attempts,
-    log_auth_event, get_all_users, get_auth_logs
+    log_auth_event, get_all_users, get_auth_logs, save_order,
+    get_user_orders, delete_order
 )
 from security import (
     hash_password, verify_password, needs_rehash,
@@ -257,6 +258,57 @@ def logout():
     logout_user()
     session.clear()
     return redirect(url_for("signin"))
+
+
+# ── API Routes for Orders ─────────────────────────────────────────────────────
+@app.route("/api/orders", methods=["GET"])
+@login_required
+def api_get_orders():
+    """Fetch all orders for the current user"""
+    try:
+        orders = get_user_orders(current_user.id)
+        # Format the response to match the frontend expectations
+        formatted_orders = []
+        for order in orders:
+            formatted_orders.append({
+                "id": order['order_id'],
+                "timestamp": order['created_at'],
+                "restaurant": order['restaurant'],
+                "items": order['items'],
+                "total": order['total'],
+                "cancelled": order['cancelled']
+            })
+        return jsonify({"success": True, "orders": formatted_orders})
+    except Exception as e:
+        logger.error(f"Error fetching orders: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/api/orders", methods=["POST"])
+@login_required
+def api_save_order():
+    """Save an order for the current user"""
+    try:
+        data = request.get_json()
+        
+        if not data or "order_id" not in data or "items" not in data:
+            return jsonify({"success": False, "error": "Missing required fields"}), 400
+        
+        order_id = data.get("order_id")
+        items = data.get("items", [])
+        restaurant = data.get("restaurant")
+        total = data.get("total", 0)
+        
+        # Save to database
+        success = save_order(current_user.id, order_id, items, restaurant, total)
+        
+        if success:
+            return jsonify({"success": True, "message": "Order saved successfully"})
+        else:
+            return jsonify({"success": False, "error": "Failed to save order"}), 500
+    except Exception as e:
+        logger.error(f"Error saving order: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 def admin_panel():

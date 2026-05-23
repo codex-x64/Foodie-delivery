@@ -1,10 +1,12 @@
 import sqlite3
 import logging
+import os
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-DATABASE = "foodie.db"
+# Use absolute path based on the app's directory to ensure persistence across runs and machines
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "foodie.db")
 
 
 def get_db():

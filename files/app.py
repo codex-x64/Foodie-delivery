@@ -1,5 +1,6 @@
 import os
 import logging
+import secrets
 from datetime import timedelta
 from functools import wraps
 
@@ -39,9 +40,39 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# ── Generate and persist SECRET_KEY ───────────────────────────────────────────
+def get_or_create_secret_key():
+    """Get SECRET_KEY from environment or create and store it."""
+    secret_key = os.environ.get("SECRET_KEY")
+    if secret_key:
+        return secret_key
+    
+    # Check if .env exists and has SECRET_KEY
+    env_file = os.path.join(os.path.dirname(__file__), ".env")
+    if os.path.exists(env_file):
+        # Try to read it again
+        from dotenv import dotenv_values
+        config = dotenv_values(env_file)
+        if "SECRET_KEY" in config:
+            return config["SECRET_KEY"]
+    
+    # Generate new key and save it to .env
+    secret_key = secrets.token_hex(32)
+    if not os.path.exists(env_file):
+        with open(env_file, "w") as f:
+            f.write(f"SECRET_KEY={secret_key}\n")
+    else:
+        # Append to existing .env
+        with open(env_file, "a") as f:
+            f.write(f"SECRET_KEY={secret_key}\n")
+    
+    logger.info("Generated and stored new SECRET_KEY in .env")
+    return secret_key
+
+
 app = Flask(__name__)
 app.config.update(
-    SECRET_KEY=os.environ.get("SECRET_KEY", os.urandom(32)),
+    SECRET_KEY=get_or_create_secret_key(),
     WTF_CSRF_ENABLED=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SECURE=os.environ.get("FLASK_ENV") == "production",
@@ -128,9 +159,11 @@ def set_security_headers(response):
     )
     if os.environ.get("FLASK_ENV") == "production":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        # Even in production, add cache busting for static content with version
+        response.headers["Cache-Control"] = "public, max-age=86400"
     else:
         # Development: Disable caching to always load latest updates
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     return response
@@ -361,4 +394,7 @@ def server_error(e):
 if __name__ == "__main__":
     init_db()
     debug_mode = os.environ.get("FLASK_ENV") != "production"
-    app.run(debug=debug_mode, host="127.0.0.1", port=5000)
+    # Bind to 0.0.0.0 to allow access from other machines on the network
+    host = os.environ.get("FLASK_HOST", "0.0.0.0")
+    port = int(os.environ.get("FLASK_PORT", 5000))
+    app.run(debug=debug_mode, host=host, port=port)

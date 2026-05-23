@@ -238,6 +238,116 @@ Example: http://192.168.1.100:8080
 
 Now other devices (phones, tablets, laptops) on the same WiFi network can access your app!
 
+### 5. Database Initialization
+
+The database is **automatically initialized** when you first run the app:
+
+```bash
+cd files
+python app.py
+
+```
+
+On startup, `app.py` calls `init_db()` which:
+
+- Creates SQLite tables if they don't exist (`users`, `auth_logs`, `orders`, `order_items`)
+- Stores the database as `files/foodie.db`
+- Uses an absolute path to ensure persistence across runs and network access
+
+**The database file (`foodie.db`) is automatically persisted** in the `files/` directory, so:
+
+- ✅ Data remains after restarting the app
+- ✅ Data is accessible from localhost AND WiFi host (same machine)
+- ✅ Data persists when you clone the project and reinstall dependencies
+
+### 6. Admin Panel Setup - Quick Start
+
+#### **Step 1**: Enable Admin Path in `.env`
+
+Open or create `.env` file in the `Foodie-delivery/files/` folder and add:
+
+```bash
+ADMIN_PATH=admin
+```
+
+(You can use any word like `secret`, `panel`, `dashboard`, etc.)
+
+#### **Step 2**: Create Admin User
+
+Open **PowerShell** or **Terminal** in `Foodie-delivery/files/` folder and run:
+
+```bash
+python -c "from database import create_user; from security import hash_password; create_user('admin', 'admin@example.com', hash_password('admin123'), role='admin'); print('✅ Admin created: admin / admin123')"
+```
+
+#### **Step 3**: Restart App
+
+```bash
+python app.py
+```
+
+#### **Step 4**: Login & Access Admin Panel
+
+1. Go to `http://localhost:5000`
+2. Sign in with:
+   - **Username**: `admin`
+   - **Password**: `admin123`
+3. After login, go to: **`http://localhost:5000/admin`**
+
+#### Admin Panel Shows
+
+- **Users Table**: Who signed up (ID, username, email, role, status, created date)
+- **Auth Logs Table**: Who logged in/out, when, and any failed attempts
+- **Scrollable Tables**: All data visible with smooth scrolling
+
+#### Admin Panel Features
+
+- ✅ View all registered users and their signup dates
+- ✅ Track login/logout activity with timestamps
+- ✅ Monitor failed login attempts
+- ✅ View account lockout events
+- ✅ Scrollable tables for large datasets
+- ✅ Role-based access (only admins can access)
+
+## Database Persistence & Network Access Troubleshooting
+
+### Issue: Data Lost After Restarting Server or Accessing from WiFi
+
+**Root Causes (Now Fixed)**:
+
+- ❌ Old code: Relative database path (`"foodie.db"`) - creates different files on different machines/runs
+- ❌ Old code: Random SECRET_KEY on each restart - invalidates all sessions
+- ❌ Old code: Host binding to `127.0.0.1` only - no WiFi access
+
+**New Solution**:
+
+- ✅ Absolute database path: `os.path.join(os.path.dirname(__file__), "foodie.db")`
+- ✅ Persistent SECRET_KEY: Generated once, stored in `.env`, reused on restarts
+- ✅ Network binding: FLASK_HOST=0.0.0.0 allows WiFi & cross-device access
+
+### Data Persistence Scenarios
+
+| Scenario                                       | Result                  | Why                                      |
+| ---------------------------------------------- | ----------------------- | ---------------------------------------- |
+| Restart app on localhost                       | ✅ Data persists        | Absolute path + persistent SECRET_KEY    |
+| Access from phone on WiFi                      | ✅ Data persists        | Same database file on same machine       |
+| Sign up on WiFi, restart, sign in on localhost | ✅ Works                | Sessions valid + database persisted      |
+| Clone from GitHub, run setup                   | ✅ Database initializes | `init_db()` creates tables automatically |
+
+### Common Troubleshooting
+
+**Problem**: "Invalid credentials" when accessing from WiFi host
+
+- **Solution**: Ensure `FLASK_HOST=0.0.0.0` in `.env` if accessing from another device
+
+**Problem**: "No users found" in admin panel after restart
+
+- **Solution**: Check that `.env` has the same `SECRET_KEY` (should be auto-generated)
+
+**Problem**: "Permission denied" when accessing database
+
+- **Solution**: Ensure `files/` directory is writable: `chmod 755 files/`
+
 ## Route Map
 
 | Route          | Method    | Access         | Description                                                      |

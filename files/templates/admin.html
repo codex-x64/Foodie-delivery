@@ -94,16 +94,40 @@
         border-radius: 14px;
         background: rgba(255, 255, 255, 0.04);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        max-height: 600px;
       }
 
       h2 {
         padding: 1rem;
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         font-size: 1rem;
+        flex-shrink: 0;
       }
 
       .table-wrap {
+        overflow-y: auto;
         overflow-x: auto;
+        flex: 1;
+      }
+
+      .table-wrap::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      .table-wrap::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .table-wrap::-webkit-scrollbar-thumb {
+        background: rgba(244, 161, 74, 0.4);
+        border-radius: 4px;
+      }
+
+      .table-wrap::-webkit-scrollbar-thumb:hover {
+        background: rgba(244, 161, 74, 0.6);
       }
 
       table {
